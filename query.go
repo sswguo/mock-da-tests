@@ -9,7 +9,8 @@ import (
 	"net/http"
 	"os"
 	"strings"
-//	"sync"
+	"sync"
+	"time"
 )
 
 type config struct{
@@ -86,6 +87,10 @@ func fetchMetadata(url string) string {
 	return "Done"
 }
 
+func mockRemoteReq() {
+	time.Sleep(500 * time.Millisecond)
+}
+
 func main() {
 	fmt.Println("Rest query metadata ...")
 
@@ -119,26 +124,26 @@ func main() {
 	fmt.Println("Total jobs:")
     fmt.Println(jobs)
 
-	//concurrentGoroutines := make(chan struct{}, c.MaxConcurrentGoroutines)
-	//var wg sync.WaitGroup
+	concurrentGoroutines := make(chan struct{}, c.MaxConcurrentGoroutines)
+	var wg sync.WaitGroup
 
 	for i := 0; i<jobs;i++{
-		//wg.Add(1)
+		concurrentGoroutines <- struct{}{}
+		wg.Add(1)
 		go func(i int) {
-			//defer wg.Done()
-			//concurrentGoroutines <- struct{}{}
+			defer wg.Done()
 			fmt.Println("doing", i)
-			results <- fetchMetadata(urls[i])
+			fetchMetadata(urls[i])
+			//mockRemoteReq()
 			fmt.Println("finished", i)
-			//<-concurrentGoroutines
+			<-concurrentGoroutines
 		}(i)
 	}
-
-	//wg.Wait()
-	
 
 	for i := 0; i < jobs; i++ {
 		fmt.Println(<-results)
 	}
+
+	wg.Wait()
 
 }

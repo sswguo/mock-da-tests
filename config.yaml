@@ -1,0 +1,4 @@
+---
+indy_url: "<INDY_INSTANCE>"
+da_group: "DA"
+max_concurrent_goroutines: 9
