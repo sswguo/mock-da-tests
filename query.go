@@ -43,9 +43,6 @@ func loadData() dataset {
 	if err != nil {
 		log.Fatalf("Unmarshal: %v", err)
 	}
-
-	fmt.Println(ds)
-
 	return ds
 }
 
@@ -62,13 +59,29 @@ func loadConfig() config {
 	if err != nil {
 		log.Fatalf("Unmarshal: %v", err)
 	}
-
 	fmt.Println(c)
-
 	return c
 }
 
-func fetchMetadata(url string) string {
+func deleteMetadata(url string) string{
+	req, err := http.NewRequest(http.MethodDelete, url, nil)
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Authorization", "Bearer ")
+
+	var c http.Client
+	resp, err := c.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	io.Copy(os.Stdout, resp.Body)
+	return "Done"
+}
+
+func fetchMetadata(gav string, url string) string {
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		panic(err)
@@ -82,40 +95,45 @@ func fetchMetadata(url string) string {
 	}
 	defer resp.Body.Close()
 
-	fmt.Println("XML:")
-	io.Copy(os.Stdout, resp.Body)
+	//fmt.Println("XML:")
+	//io.Copy(os.Stdout, resp.Body)
+
+	// Create new file
+	file := strings.ReplaceAll(gav, ":", "-")
+	tmp, err := os.Create("results/" + file + ".xml")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer tmp.Close()
+
+	bytesWritten, err := io.Copy(tmp, resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("Bytes Written: %d\n", bytesWritten)
+
 	return "Done"
 }
 
-func mockRemoteReq() {
-	time.Sleep(500 * time.Millisecond)
-}
-
-func main() {
-	fmt.Println("Rest query metadata ...")
-
-	c := loadConfig()
-
+func doRun(c config, ds dataset){
 	indyUrl := c.IndyUrl
 	daGroup := c.DAGroup
-
-	ds := loadData()
 
 	results := make(chan string)
 
 	jobs := 0
-	var urls [50]string
+	var urls [10000]string
+	var gavs [10000]string
 
 	for idx, element := range ds.Artifacts {
 		fmt.Println(idx, element.Name)
 		for idx_, gav := range element.Gavs {
+		    gavs[jobs] = gav
 			fmt.Println(idx_, gav)
 			s := strings.Split(gav, ":")
 			groupId := strings.ReplaceAll(s[0], ".", "/")
 			artifactId := s[1]
 			url := fmt.Sprintf("%s/api/content/maven/group/%s/%s/%s/maven-metadata.xml", indyUrl, daGroup, groupId, artifactId)
-			fmt.Println(url)
-            // need to find a better way to collect the url
 			urls[jobs] = url
 			jobs = jobs+1
 		}
@@ -127,15 +145,18 @@ func main() {
 	concurrentGoroutines := make(chan struct{}, c.MaxConcurrentGoroutines)
 	var wg sync.WaitGroup
 
-	for i := 0; i<jobs;i++{
+	for i := 0; i < jobs; i++ {
 		concurrentGoroutines <- struct{}{}
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
 			fmt.Println("doing", i)
-			fetchMetadata(urls[i])
-			//mockRemoteReq()
+			start := time.Now()
+			fetchMetadata(gavs[i], urls[i])
+			//deleteMetadata(urls[i])
+			elapsed := time.Since(start)
 			fmt.Println("finished", i)
+			fmt.Println("took", elapsed)
 			<-concurrentGoroutines
 		}(i)
 	}
@@ -145,5 +166,10 @@ func main() {
 	}
 
 	wg.Wait()
+}
 
+func main() {
+	c := loadConfig()
+	ds := loadData()
+	doRun(c, ds)
 }
