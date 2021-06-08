@@ -9,6 +9,9 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"sync"
+	"time"
+	"io"
 )
 
 type configA struct{
@@ -23,7 +26,7 @@ func loadConfigA() configA {
 
 	configFile, err := ioutil.ReadFile("config.yaml")
 	if err != nil {
-		fmt.Println("configFile.Get err   #%v ", err)
+		fmt.Println("configFile.Get err #%v ", err)
 	}
 
 	c := configA{}
@@ -59,8 +62,40 @@ func getAlignLog(url string) string {
 	return responseString
 }
 
-func main() {
+func lookupMetadata(gav string, url string) string {
+	fmt.Println(url)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Accept", "application/xml")
 
+	var c http.Client
+	resp, err := c.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	// Create new file
+	tempArray := strings.Split(gav, "=")
+	file := strings.ReplaceAll(tempArray[0], ":", "-")
+	tmp, err := os.Create("results/" + file + ".xml")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer tmp.Close()
+
+	bytesWritten, err := io.Copy(tmp, resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("Bytes Written: %d\n", bytesWritten)
+
+	return "Done"
+}
+
+func main() {
 
 	c := loadConfigA()
 
@@ -69,6 +104,8 @@ func main() {
 	fmt.Println(buildId)
 
 	pncRest := c.PncRest
+	indyUrl := c.IndyUrl
+	daGroup := c.DAGroup
 
 	url := fmt.Sprintf("%s/builds/%s/logs/align", pncRest, buildId)
 
@@ -80,6 +117,10 @@ func main() {
 
 	var re = regexp.MustCompile(`(?s)REST Client returned.*?\}`)
     
+	jobs := 0
+	var urls [10000]string
+	var gavA [10000]string
+
     for i, match := range re.FindAllString(alignLog, -1) {
         fmt.Println(match, "found at index", i)
 
@@ -91,7 +132,47 @@ func main() {
 
 		for idx, gav := range gavArray {
 			fmt.Println(idx, gav)
-			fmt.Println("-", gav)
+
+			s := strings.Split(gav, ":")
+			groupId := strings.ReplaceAll(strings.Trim(s[0], " "), ".", "/")
+			artifactId := s[1]
+
+			fmt.Println("GroupID: ", groupId, " ArtifactId: ", artifactId)
+
+			url := fmt.Sprintf("%s/api/content/maven/group/%s/%s/%s/maven-metadata.xml", indyUrl, daGroup, groupId, artifactId)
+
+			urls[jobs] = url
+			gavA[jobs] = gav
+			jobs = jobs+1
 		}
+
+		fmt.Println("Total jobs:", jobs, " for buildId:", buildId)
     }
+
+	results := make(chan string)
+
+	concurrentGoroutines := make(chan struct{}, c.MaxConcurrentGoroutines)
+	var wg sync.WaitGroup
+
+	for i := 0; i < jobs; i++ {
+		concurrentGoroutines <- struct{}{}
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			fmt.Println("doing", i)
+			start := time.Now()
+			lookupMetadata(gavA[i], urls[i])
+			elapsed := time.Since(start)
+			fmt.Println("finished", i)
+			fmt.Println("took", elapsed)
+			<-concurrentGoroutines
+		}(i)
+	}
+
+	for i := 0; i < jobs; i++ {
+		fmt.Println(<-results)
+	}
+
+	wg.Wait()
+
 }
