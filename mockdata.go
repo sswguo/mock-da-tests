@@ -77,7 +77,7 @@ func lookupMetadata(gav string, url string) string {
 	}
 	defer resp.Body.Close()
 
-	// Create new file
+	// dump the metadata file locally for verifying
 	tempArray := strings.Split(gav, "=")
 	file := strings.ReplaceAll(tempArray[0], ":", "-")
 	tmp, err := os.Create("results/" + file + ".xml")
@@ -115,18 +115,17 @@ func main() {
 
 	fmt.Println(alignLog)
 
+	// extract the gav list from alignment log
 	var re = regexp.MustCompile(`(?s)REST Client returned.*?\}`)
     
 	jobs := 0
-	var urls [10000]string
-	var gavA [10000]string
+	var urls [1000]string
+	var gavA [1000]string
 
     for i, match := range re.FindAllString(alignLog, -1) {
         fmt.Println(match, "found at index", i)
 
 		gavs := match[len("REST Client returned {"):len(match)-1]
-
-		fmt.Println(match[len("REST Client returned {"):len(match)-1])
 		
 		gavArray := strings.Split(gavs, ",")
 
@@ -134,12 +133,14 @@ func main() {
 			fmt.Println(idx, gav)
 
 			s := strings.Split(gav, ":")
-			groupId := strings.ReplaceAll(strings.Trim(s[0], " "), ".", "/")
+			groupId := strings.Trim(s[0], " ")
 			artifactId := s[1]
 
 			fmt.Println("GroupID: ", groupId, " ArtifactId: ", artifactId)
 
-			url := fmt.Sprintf("%s/api/content/maven/group/%s/%s/%s/maven-metadata.xml", indyUrl, daGroup, groupId, artifactId)
+			groupIdPath := strings.ReplaceAll(groupId, ".", "/")
+
+			url := fmt.Sprintf("%s/api/content/maven/group/%s/%s/%s/maven-metadata.xml", indyUrl, daGroup, groupIdPath, artifactId)
 
 			urls[jobs] = url
 			gavA[jobs] = gav
@@ -159,12 +160,11 @@ func main() {
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
-			fmt.Println("doing", i)
+			fmt.Println("Doing", i)
 			start := time.Now()
 			lookupMetadata(gavA[i], urls[i])
 			elapsed := time.Since(start)
-			fmt.Println("finished", i)
-			fmt.Println("took", elapsed)
+			fmt.Println("Finished #", i, " in ", elapsed)
 			<-concurrentGoroutines
 		}(i)
 	}
