@@ -16,7 +16,7 @@ import (
 
 type configA struct{
 	PncRest string `yaml:"pnc_rest_url"`
-    IndyUrl string `yaml:"indy_url"`
+	IndyUrl string `yaml:"indy_url"`
 	DAGroup string `yaml:"da_group"`
 	MaxConcurrentGoroutines int `yaml:"max_concurrent_goroutines"`
 }
@@ -53,11 +53,11 @@ func getAlignLog(url string) string {
 	defer resp.Body.Close()
 
 	responseData, err := ioutil.ReadAll(resp.Body)
-    if err != nil {
-        log.Fatal(err)
-    }
+	if err != nil {
+		log.Fatal(err)
+	}
 
-    responseString := string(responseData)
+	responseString := string(responseData)
 
 	return responseString
 }
@@ -117,13 +117,13 @@ func main() {
 
 	// extract the gav list from alignment log
 	var re = regexp.MustCompile(`(?s)REST Client returned.*?\}`)
-    
+
 	jobs := 0
 	var urls [1000]string
 	var gavA [1000]string
 
-    for i, match := range re.FindAllString(alignLog, -1) {
-        fmt.Println(match, "found at index", i)
+	for i, match := range re.FindAllString(alignLog, -1) {
+		fmt.Println(match, "found at index", i)
 
 		gavs := match[len("REST Client returned {"):len(match)-1]
 		
@@ -148,7 +148,7 @@ func main() {
 		}
 
 		fmt.Println("Total jobs:", jobs, " for buildId:", buildId)
-    }
+	}
 
 	results := make(chan string)
 
