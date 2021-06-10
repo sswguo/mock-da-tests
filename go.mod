@@ -1,4 +1,4 @@
-module Commonjava.org/query
+module Commonjava.org/indy/mockdatests
 
 go 1.13
 
