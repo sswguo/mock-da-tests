@@ -14,14 +14,14 @@ import (
 	"io"
 )
 
-type configA struct{
+type config struct{
 	PncRest string `yaml:"pnc_rest_url"`
 	IndyUrl string `yaml:"indy_url"`
 	DAGroup string `yaml:"da_group"`
 	MaxConcurrentGoroutines int `yaml:"max_concurrent_goroutines"`
 }
 
-func loadConfigA() configA {
+func loadConfig() config {
 	fmt.Println("load config from config.yaml")
 
 	configFile, err := ioutil.ReadFile("config.yaml")
@@ -29,7 +29,7 @@ func loadConfigA() configA {
 		fmt.Println("configFile.Get err #%v ", err)
 	}
 
-	c := configA{}
+	c := config{}
 	err = yaml.Unmarshal(configFile, &c)
 	if err != nil {
 		log.Fatalf("Unmarshal: %v", err)
@@ -57,9 +57,7 @@ func getAlignLog(url string) string {
 		log.Fatal(err)
 	}
 
-	responseString := string(responseData)
-
-	return responseString
+	return string(responseData)
 }
 
 func lookupMetadata(gav string, url string) string {
@@ -97,11 +95,11 @@ func lookupMetadata(gav string, url string) string {
 
 func main() {
 
-	c := loadConfigA()
+	c := loadConfig()
 
 	buildId := os.Args[1]
 
-	fmt.Println(buildId)
+	fmt.Println("buildId: ", buildId)
 
 	pncRest := c.PncRest
 	indyUrl := c.IndyUrl
@@ -122,15 +120,13 @@ func main() {
 	var urls [1000]string
 	var gavA [1000]string
 
-	for i, match := range re.FindAllString(alignLog, -1) {
-		fmt.Println(match, "found at index", i)
+	for _, match := range re.FindAllString(alignLog, -1) {
 
 		gavs := match[len("REST Client returned {"):len(match)-1]
 		
 		gavArray := strings.Split(gavs, ",")
 
-		for idx, gav := range gavArray {
-			fmt.Println(idx, gav)
+		for _, gav := range gavArray {
 
 			s := strings.Split(gav, ":")
 			groupId := strings.Trim(s[0], " ")
