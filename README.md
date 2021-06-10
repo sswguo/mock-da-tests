@@ -1,4 +1,4 @@
-# query-metadata
+# query metadata 
 
 The script is used to grab the alignment logs from PNC
 and extract the gavs from it, then request the metadata 
