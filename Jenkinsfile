@@ -1,9 +1,14 @@
 pipeline {
     agent { docker { image 'golang' } }
     stages {
+        stage('Build') {
+            steps {
+                sh 'go build cmd/mockdatests/main.go'
+            }
+        }
         stage('Running') {
             steps {
-                sh 'go run mockdata.go $BUILD_ID'
+                sh './main $BUILD_ID'
             }
         }
     }
