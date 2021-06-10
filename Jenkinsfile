@@ -1,8 +1,5 @@
 pipeline {
     agent any
-    tools {
-        go
-    }
     stages {
         stage('Running') {
             steps {
