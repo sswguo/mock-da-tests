@@ -1,4 +1,5 @@
 ---
-indy_url: "<INDY_INSTANCE>"
+pnc_rest_url: "<PNC_REST_URL>"
+indy_url: "INDY_INSTANCE"
 da_group: "DA"
 max_concurrent_goroutines: 9
