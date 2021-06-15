@@ -95,7 +95,7 @@ pipeline {
 
     stage('Run') {
       steps {
-        sh 'main'
+        sh './main'
       }
     }
   }
