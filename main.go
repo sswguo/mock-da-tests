@@ -104,7 +104,7 @@ func main() {
 
 	alignLog := getAlignLog(url)
 
-	fmt.Println(alignLog)
+	//fmt.Println(alignLog)
 
 	// extract the gav list from alignment log
 	var re = regexp.MustCompile(`(?s)REST Client returned.*?\}`)
