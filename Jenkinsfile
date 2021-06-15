@@ -67,6 +67,9 @@ pipeline {
     PIPELINE_NAMESPACE = readFile('/run/secrets/kubernetes.io/serviceaccount/namespace').trim()
     PIPELINE_USERNAME = sh(returnStdout: true, script: 'id -un').trim()
   }
+  parameters {
+        string(name: 'BuildID', defaultValue: '', description: 'Enter the build id.')
+    }
   stages {
     stage('Prepare') {
       steps {
@@ -95,7 +98,7 @@ pipeline {
 
     stage('Run') {
       steps {
-        sh './main'
+        sh './mockdatests ${params.BuildID}'
       }
     }
   }
