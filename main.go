@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"gopkg.in/yaml.v2"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -11,20 +12,19 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"io"
 )
 
-type config struct{
-	PncRest string `yaml:"pnc_rest_url"`
-	IndyUrl string `yaml:"indy_url"`
-	DAGroup string `yaml:"da_group"`
-	MaxConcurrentGoroutines int `yaml:"max_concurrent_goroutines"`
+type config struct {
+	PncRest                 string `yaml:"pnc_rest_url"`
+	IndyUrl                 string `yaml:"indy_url"`
+	DAGroup                 string `yaml:"da_group"`
+	MaxConcurrentGoroutines int    `yaml:"max_concurrent_goroutines"`
 }
 
 func loadConfig() config {
 	fmt.Println("load config from config.yaml")
 
-	configFile, err := ioutil.ReadFile("config.yaml")
+	configFile, err := ioutil.ReadFile("config-local.yaml")
 	if err != nil {
 		fmt.Println("configFile.Get err #%v ", err)
 	}
@@ -95,15 +95,15 @@ func lookupMetadata(gav string, url string) string {
 
 func main() {
 
-	c := loadConfig()
+	//c := loadConfig()
 
-	buildId := os.Args[1]
+	buildId := os.Getenv("BUILD_ID") //os.Args[1]
 
 	fmt.Println("buildId: ", buildId)
 
-	pncRest := c.PncRest
-	indyUrl := c.IndyUrl
-	daGroup := c.DAGroup
+	pncRest := os.Getenv("PNC_REST") //c.PncRest
+	indyUrl := os.Getenv("INDY_URL") //c.IndyUrl
+	daGroup := os.Getenv("DA_GROUP") //c.DAGroup
 
 	url := fmt.Sprintf("%s/builds/%s/logs/align", pncRest, buildId)
 
@@ -122,8 +122,8 @@ func main() {
 
 	for _, match := range re.FindAllString(alignLog, -1) {
 
-		gavs := match[len("REST Client returned {"):len(match)-1]
-		
+		gavs := match[len("REST Client returned {") : len(match)-1]
+
 		gavArray := strings.Split(gavs, ",")
 
 		for _, gav := range gavArray {
@@ -140,7 +140,7 @@ func main() {
 
 			urls[jobs] = url
 			gavA[jobs] = gav
-			jobs = jobs+1
+			jobs = jobs + 1
 		}
 
 		fmt.Println("Total jobs:", jobs, " for buildId:", buildId)
@@ -148,7 +148,7 @@ func main() {
 
 	results := make(chan string)
 
-	concurrentGoroutines := make(chan struct{}, c.MaxConcurrentGoroutines)
+	concurrentGoroutines := make(chan struct{}, 9) //c.MaxConcurrentGoroutines)
 	var wg sync.WaitGroup
 
 	for i := 0; i < jobs; i++ {
