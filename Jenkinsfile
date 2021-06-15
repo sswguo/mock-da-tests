@@ -68,7 +68,10 @@ pipeline {
     PIPELINE_USERNAME = sh(returnStdout: true, script: 'id -un').trim()
   }
   parameters {
-        string(name: 'BuildID', defaultValue: '', description: 'Enter the build id.')
+    string(name: 'PNC_REST', defaultValue: '', description: 'Enter the pnc rest url.')
+    string(name: 'INDY_URL', defaultValue: '', description: 'Enter the indy url.')
+    string(name: 'DA_GROUP', defaultValue: '', description: 'Enter the name of da group.')
+    string(name: 'BuildID', defaultValue: '', description: 'Enter the build id.')
     }
   stages {
     stage('Prepare') {
