@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"gopkg.in/yaml.v2"
-	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -12,6 +10,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"gopkg.in/yaml.v2"
 )
 
 type config struct {
@@ -75,13 +75,17 @@ func lookupMetadata(url string) string {
 	}
 	defer resp.Body.Close()
 
-	dst := os.Stdout
-
-	bytes, err := io.Copy(dst, resp.Body)
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal("err:", err)
+		log.Fatal(err)
 	}
-	fmt.Printf("Bytes Written: %d\n", bytes)
+	bodyString := string(bodyBytes)
+
+	if strings.Contains(bodyString, "Message:") {
+		fmt.Printf(bodyString)
+	}
+
+	//fmt.Printf("Bytes Written: %d\n", bodyBytes)
 
 	return "Done"
 }
