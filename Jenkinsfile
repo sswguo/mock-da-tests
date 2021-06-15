@@ -71,7 +71,7 @@ pipeline {
     string(name: 'PNC_REST', defaultValue: '', description: 'Enter the pnc rest url.')
     string(name: 'INDY_URL', defaultValue: '', description: 'Enter the indy url.')
     string(name: 'DA_GROUP', defaultValue: '', description: 'Enter the name of da group.')
-    string(name: 'BuildID', defaultValue: '', description: 'Enter the build id.')
+    string(name: 'Build_ID', defaultValue: '', description: 'Enter the build id.')
     }
   stages {
     stage('Prepare') {
@@ -101,7 +101,7 @@ pipeline {
 
     stage('Run') {
       steps {
-        sh './mockdatests ${params.BuildID}'
+        sh './mockdatests ${params.PNC_REST} ${params.INDY_URL} ${params.DA_GROUP} ${params.Build_ID}'
       }
     }
   }
