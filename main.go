@@ -98,13 +98,13 @@ func main() {
 
 	//c := loadConfig()
 
-	buildId := os.Args[1] //os.Getenv("BUILD_ID") //
+	buildId := os.Args[4] //os.Getenv("BUILD_ID") //
 
 	fmt.Println("buildId: ", buildId)
 
-	pncRest := os.Getenv("PNC_REST") //c.PncRest
-	indyUrl := os.Getenv("INDY_URL") //c.IndyUrl
-	daGroup := os.Getenv("DA_GROUP") //c.DAGroup
+	pncRest := os.Args[1]//os.Getenv("PNC_REST") //c.PncRest
+	indyUrl := os.Args[2]//os.Getenv("INDY_URL") //c.IndyUrl
+	daGroup := os.Args[3]//os.Getenv("DA_GROUP") //c.DAGroup
 
 	url := fmt.Sprintf("%s/builds/%s/logs/align", pncRest, buildId)
 
