@@ -101,7 +101,7 @@ pipeline {
 
     stage('Run') {
       steps {
-        sh './mockdatests ${params.PNC_REST} ${params.INDY_URL} ${params.DA_GROUP} ${params.Build_ID}'
+        sh "./mockdatests ${params.PNC_REST} ${params.INDY_URL} ${params.DA_GROUP} ${params.Build_ID}"
       }
     }
   }
