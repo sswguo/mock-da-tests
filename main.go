@@ -60,7 +60,7 @@ func getAlignLog(url string) string {
 	return string(responseData)
 }
 
-func lookupMetadata(gav string, url string) string {
+func lookupMetadata(url string) string {
 	fmt.Println(url)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -75,14 +75,6 @@ func lookupMetadata(gav string, url string) string {
 	}
 	defer resp.Body.Close()
 
-	// dump the metadata file locally for verifying
-	//tempArray := strings.Split(gav, "=")
-	//file := strings.ReplaceAll(tempArray[0], ":", "-")
-	//tmp, err := os.Create("results/" + file + ".xml"s)
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-	//defer tmp.Close()
 	dst := os.Stdout
 
 	bytes, err := io.Copy(dst, resp.Body)
@@ -102,9 +94,9 @@ func main() {
 
 	fmt.Println("buildId: ", buildId)
 
-	pncRest := os.Args[1]//os.Getenv("PNC_REST") //c.PncRest
-	indyUrl := os.Args[2]//os.Getenv("INDY_URL") //c.IndyUrl
-	daGroup := os.Args[3]//os.Getenv("DA_GROUP") //c.DAGroup
+	pncRest := os.Args[1] //os.Getenv("PNC_REST") //c.PncRest
+	indyUrl := os.Args[2] //os.Getenv("INDY_URL") //c.IndyUrl
+	daGroup := os.Args[3] //os.Getenv("DA_GROUP") //c.DAGroup
 
 	url := fmt.Sprintf("%s/builds/%s/logs/align", pncRest, buildId)
 
@@ -117,9 +109,7 @@ func main() {
 	// extract the gav list from alignment log
 	var re = regexp.MustCompile(`(?s)REST Client returned.*?\}`)
 
-	jobs := 0
-	var urls [1000]string
-	var gavA [1000]string
+	var urls []string
 
 	for _, match := range re.FindAllString(alignLog, -1) {
 
@@ -139,36 +129,35 @@ func main() {
 
 			url := fmt.Sprintf("%s/api/content/maven/group/%s/%s/%s/maven-metadata.xml", indyUrl, daGroup, groupIdPath, artifactId)
 
-			urls[jobs] = url
-			gavA[jobs] = gav
-			jobs = jobs + 1
+			urls = append(urls, url)
+
 		}
 
-		fmt.Println("Total jobs:", jobs, " for buildId:", buildId)
+		fmt.Println("Total requests:", len(urls), " for buildId:", buildId)
 	}
 
-	results := make(chan string)
+	//results := make(chan string)
 
 	concurrentGoroutines := make(chan struct{}, 9) //c.MaxConcurrentGoroutines)
 	var wg sync.WaitGroup
 
-	for i := 0; i < jobs; i++ {
+	for i := 0; i < len(urls); i++ {
 		concurrentGoroutines <- struct{}{}
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
 			fmt.Println("Doing", i)
 			start := time.Now()
-			lookupMetadata(gavA[i], urls[i])
+			lookupMetadata(urls[i])
 			elapsed := time.Since(start)
 			fmt.Println("Finished #", i, " in ", elapsed)
 			<-concurrentGoroutines
 		}(i)
 	}
 
-	for i := 0; i < jobs; i++ {
-		fmt.Println(<-results)
-	}
+	//for i := 0; i < len(urls); i++ {
+	//	fmt.Println(<-results)
+	//}
 
 	wg.Wait()
 
