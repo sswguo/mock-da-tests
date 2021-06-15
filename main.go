@@ -76,19 +76,20 @@ func lookupMetadata(gav string, url string) string {
 	defer resp.Body.Close()
 
 	// dump the metadata file locally for verifying
-	tempArray := strings.Split(gav, "=")
-	file := strings.ReplaceAll(tempArray[0], ":", "-")
-	tmp, err := os.Create("results/" + file + ".xml")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer tmp.Close()
+	//tempArray := strings.Split(gav, "=")
+	//file := strings.ReplaceAll(tempArray[0], ":", "-")
+	//tmp, err := os.Create("results/" + file + ".xml"s)
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	//defer tmp.Close()
+	dst := os.Stdout
 
-	bytesWritten, err := io.Copy(tmp, resp.Body)
+	bytes, err := io.Copy(dst, resp.Body)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("err:", err)
 	}
-	fmt.Printf("Bytes Written: %d\n", bytesWritten)
+	fmt.Printf("Bytes Written: %d\n", bytes)
 
 	return "Done"
 }
@@ -97,7 +98,7 @@ func main() {
 
 	//c := loadConfig()
 
-	buildId := os.Getenv("BUILD_ID") //os.Args[1]
+	buildId := os.Args[1] //os.Getenv("BUILD_ID") //
 
 	fmt.Println("buildId: ", buildId)
 
