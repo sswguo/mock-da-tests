@@ -19,6 +19,12 @@ def artifact_glob="build/*"
 def build_image="quay.io/factory2/spmm-jenkins-agent-go-centos7:latest"
 // backup build image
 // def build_image = "quay.io/app-sre/ubi8-go-toolset:1.15.7"
+
+node('master') {
+    PNC_REST = params.PNC_REST ?: ""
+    INDY_URL = params.INDY_URL ?: ""
+}
+
 pipeline {
   agent {
     kubernetes {
@@ -68,8 +74,8 @@ pipeline {
     PIPELINE_USERNAME = sh(returnStdout: true, script: 'id -un').trim()
   }
   parameters {
-    string(name: 'PNC_REST', defaultValue: '', description: 'Enter the pnc rest url.')
-    string(name: 'INDY_URL', defaultValue: '', description: 'Enter the indy url.')
+    string(name: 'PNC_REST', defaultValue: PNC_REST, description: 'Enter the pnc rest url.')
+    string(name: 'INDY_URL', defaultValue: INDY_URL, description: 'Enter the indy url.')
     string(name: 'DA_GROUP', defaultValue: 'DA', description: 'Enter the name of da group.')
     string(name: 'Build_ID', defaultValue: '', description: 'Enter the build id.')
     string(name: 'Concurrent_Goroutines', defaultValue: '9', description: 'Enter the max number of concurrent goroutines.')
