@@ -1,4 +1,4 @@
-module github.com/Commonjava/indy/mockdatests
+module github.com/Commonjava/indy/mock-dependency-analysis
 
 go 1.16
 
