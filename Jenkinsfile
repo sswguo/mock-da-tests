@@ -20,6 +20,7 @@ def build_image="quay.io/factory2/spmm-jenkins-agent-go-centos7:latest"
 // backup build image
 // def build_image = "quay.io/app-sre/ubi8-go-toolset:1.15.7"
 
+// in order to retrieve parameters from previous executions
 node('master') {
     PNC_REST = params.PNC_REST ?: ""
     INDY_URL = params.INDY_URL ?: ""
