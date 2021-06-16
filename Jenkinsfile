@@ -70,8 +70,9 @@ pipeline {
   parameters {
     string(name: 'PNC_REST', defaultValue: '', description: 'Enter the pnc rest url.')
     string(name: 'INDY_URL', defaultValue: '', description: 'Enter the indy url.')
-    string(name: 'DA_GROUP', defaultValue: '', description: 'Enter the name of da group.')
+    string(name: 'DA_GROUP', defaultValue: 'DA', description: 'Enter the name of da group.')
     string(name: 'Build_ID', defaultValue: '', description: 'Enter the build id.')
+    string(name: 'Concurrent_Goroutines', defaultValue: '9', description: 'Enter the max number of concurrent goroutines.')
     }
   stages {
     stage('Prepare') {
@@ -101,7 +102,7 @@ pipeline {
 
     stage('Run') {
       steps {
-        sh "./main ${params.PNC_REST} ${params.INDY_URL} ${params.DA_GROUP} ${params.Build_ID}"
+        sh "./main ${params.PNC_REST} ${params.INDY_URL} ${params.DA_GROUP} ${params.Build_ID} ${params.Concurrent_Goroutines}"
       }
     }
   }

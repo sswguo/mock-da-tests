@@ -2,16 +2,16 @@ package main
 
 import (
 	"fmt"
+	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
-
-	"gopkg.in/yaml.v2"
 )
 
 type config struct {
@@ -101,6 +101,12 @@ func main() {
 	pncRest := os.Args[1] //os.Getenv("PNC_REST") //c.PncRest
 	indyUrl := os.Args[2] //os.Getenv("INDY_URL") //c.IndyUrl
 	daGroup := os.Args[3] //os.Getenv("DA_GROUP") //c.DAGroup
+	goroutines := os.Args[4]
+
+	routines, err := strconv.Atoi(goroutines)
+	if err == nil {
+		fmt.Println(routines)
+	}
 
 	url := fmt.Sprintf("%s/builds/%s/logs/align", pncRest, buildId)
 
@@ -142,7 +148,7 @@ func main() {
 
 	//results := make(chan string)
 
-	concurrentGoroutines := make(chan struct{}, 9) //c.MaxConcurrentGoroutines)
+	concurrentGoroutines := make(chan struct{}, routines) //c.MaxConcurrentGoroutines)
 	var wg sync.WaitGroup
 
 	for i := 0; i < len(urls); i++ {
