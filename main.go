@@ -101,7 +101,7 @@ func main() {
 	pncRest := os.Args[1] //os.Getenv("PNC_REST") //c.PncRest
 	indyUrl := os.Args[2] //os.Getenv("INDY_URL") //c.IndyUrl
 	daGroup := os.Args[3] //os.Getenv("DA_GROUP") //c.DAGroup
-	goroutines := os.Args[4]
+	goroutines := os.Args[5]
 
 	routines, err := strconv.Atoi(goroutines)
 	if err == nil {
@@ -119,10 +119,10 @@ func main() {
 
 		alignLog := getAlignLog(url)
 
-		//fmt.Println(alignLog)
-
 		// extract the gav list from alignment log
 		var re = regexp.MustCompile(`(?s)REST Client returned.*?\}`)
+
+		var urlsTmp []string
 
 		for _, match := range re.FindAllString(alignLog, -1) {
 
@@ -142,19 +142,21 @@ func main() {
 
 				url := fmt.Sprintf("%s/api/content/maven/group/%s/%s/%s/maven-metadata.xml", indyUrl, daGroup, groupIdPath, artifactId)
 
+				urlsTmp = append(urlsTmp, url)
 				urls = append(urls, url)
 
 			}
 
-			fmt.Println("Total requests:", len(urls), " for buildId:", buildId)
+			fmt.Println("Requests:", len(urlsTmp), " for buildId:", buildId)
 		}
 	}
 
+	fmt.Println("Total requests: ", len(urls), "with routines:", routines)
 	//results := make(chan string)
 
 	concurrentGoroutines := make(chan struct{}, routines) //c.MaxConcurrentGoroutines)
 	var wg sync.WaitGroup
-
+    
 	for i := 0; i < len(urls); i++ {
 		concurrentGoroutines <- struct{}{}
 		wg.Add(1)
