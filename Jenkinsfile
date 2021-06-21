@@ -79,7 +79,7 @@ pipeline {
     string(name: 'PNC_REST', defaultValue: PNC_REST, description: 'Enter the pnc rest url.')
     string(name: 'INDY_URL', defaultValue: INDY_URL, description: 'Enter the indy url.')
     string(name: 'DA_GROUP', defaultValue: 'DA', description: 'Enter the name of da group.')
-    string(name: 'Build_IDs', defaultValue: '', description: 'Enter the list of build id, separated by commas.')
+    string(name: 'Build_IDs', defaultValue: Build_IDs, description: 'Enter the list of build id, separated by commas.')
     string(name: 'Concurrent_Goroutines', defaultValue: '9', description: 'Enter the max number of concurrent goroutines.')
     }
   stages {
