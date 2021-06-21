@@ -94,9 +94,9 @@ func main() {
 
 	//c := loadConfig()
 
-	buildId := os.Args[4] //os.Getenv("BUILD_ID") //
+	buildIds := os.Args[4] //os.Getenv("BUILD_ID") //
 
-	fmt.Println("buildId: ", buildId)
+	fmt.Println("buildIds: ", buildIds)
 
 	pncRest := os.Args[1] //os.Getenv("PNC_REST") //c.PncRest
 	indyUrl := os.Args[2] //os.Getenv("INDY_URL") //c.IndyUrl
@@ -108,42 +108,46 @@ func main() {
 		fmt.Println(routines)
 	}
 
-	url := fmt.Sprintf("%s/builds/%s/logs/align", pncRest, buildId)
-
-	fmt.Println(url)
-
-	alignLog := getAlignLog(url)
-
-	//fmt.Println(alignLog)
-
-	// extract the gav list from alignment log
-	var re = regexp.MustCompile(`(?s)REST Client returned.*?\}`)
+	buildIdArray := strings.Split(buildIds, ",")
 
 	var urls []string
 
-	for _, match := range re.FindAllString(alignLog, -1) {
+	for _, buildId := range buildIdArray {
+		url := fmt.Sprintf("%s/builds/%s/logs/align", pncRest, buildId)
 
-		gavs := match[len("REST Client returned {") : len(match)-1]
+		fmt.Println(url)
 
-		gavArray := strings.Split(gavs, ",")
+		alignLog := getAlignLog(url)
 
-		for _, gav := range gavArray {
+		//fmt.Println(alignLog)
 
-			s := strings.Split(gav, ":")
-			groupId := strings.Trim(s[0], " ")
-			artifactId := s[1]
+		// extract the gav list from alignment log
+		var re = regexp.MustCompile(`(?s)REST Client returned.*?\}`)
 
-			fmt.Println("GroupID: ", groupId, " ArtifactId: ", artifactId)
+		for _, match := range re.FindAllString(alignLog, -1) {
 
-			groupIdPath := strings.ReplaceAll(groupId, ".", "/")
+			gavs := match[len("REST Client returned {") : len(match)-1]
 
-			url := fmt.Sprintf("%s/api/content/maven/group/%s/%s/%s/maven-metadata.xml", indyUrl, daGroup, groupIdPath, artifactId)
+			gavArray := strings.Split(gavs, ",")
 
-			urls = append(urls, url)
+			for _, gav := range gavArray {
 
+				s := strings.Split(gav, ":")
+				groupId := strings.Trim(s[0], " ")
+				artifactId := s[1]
+
+				fmt.Println("GroupID: ", groupId, " ArtifactId: ", artifactId)
+
+				groupIdPath := strings.ReplaceAll(groupId, ".", "/")
+
+				url := fmt.Sprintf("%s/api/content/maven/group/%s/%s/%s/maven-metadata.xml", indyUrl, daGroup, groupIdPath, artifactId)
+
+				urls = append(urls, url)
+
+			}
+
+			fmt.Println("Total requests:", len(urls), " for buildId:", buildId)
 		}
-
-		fmt.Println("Total requests:", len(urls), " for buildId:", buildId)
 	}
 
 	//results := make(chan string)

@@ -24,6 +24,7 @@ def build_image="quay.io/factory2/spmm-jenkins-agent-go-centos7:latest"
 node('master') {
     PNC_REST = params.PNC_REST ?: ""
     INDY_URL = params.INDY_URL ?: ""
+    Build_IDs = params.Build_IDs ?: ""
 }
 
 pipeline {
@@ -78,7 +79,7 @@ pipeline {
     string(name: 'PNC_REST', defaultValue: PNC_REST, description: 'Enter the pnc rest url.')
     string(name: 'INDY_URL', defaultValue: INDY_URL, description: 'Enter the indy url.')
     string(name: 'DA_GROUP', defaultValue: 'DA', description: 'Enter the name of da group.')
-    string(name: 'Build_ID', defaultValue: '', description: 'Enter the build id.')
+    string(name: 'Build_IDs', defaultValue: '', description: 'Enter the list of build id, separated by commas.')
     string(name: 'Concurrent_Goroutines', defaultValue: '9', description: 'Enter the max number of concurrent goroutines.')
     }
   stages {
@@ -109,7 +110,7 @@ pipeline {
 
     stage('Run') {
       steps {
-        sh "./main ${params.PNC_REST} ${params.INDY_URL} ${params.DA_GROUP} ${params.Build_ID} ${params.Concurrent_Goroutines}"
+        sh "./main ${params.PNC_REST} ${params.INDY_URL} ${params.DA_GROUP} ${params.Build_IDs} ${params.Concurrent_Goroutines}"
       }
     }
   }
